@@ -1,0 +1,566 @@
+openapi: 3.0.3
+info:
+  title: Travellers - Social network API 1.0.0
+  contact:
+    email: email@travellers.test
+  version: 1.0.0
+servers:
+  - url: 'https://server.com'
+tags:
+  - name: users
+    description: Users management
+  - name: posts
+    description: Posts management
+  - name: ui
+    description: UI related API calls
+paths:
+  /users:
+    post:
+      tags:
+        - users
+      summary: Create a user
+      operationId: createUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserForm'
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        400:
+          description: Validation errors for data
+        403:
+          description: A user with such details already exists
+        500:
+          description: Internal server error
+  /users/{userId}:
+    put:
+      tags:
+        - users
+      summary: Update user profile
+      security:
+        - cookieAuth: []
+      operationId: updateUserProfile
+      parameters:
+        - name: userId
+          in: path
+          description: User Id
+          required: true
+          content:
+            application/json:
+              schema:
+                type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstname:
+                  type: string
+                lastname:
+                  type: string
+      responses:
+        200:
+          description: Successfully update user's profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        400:
+          description: Data validation error
+        401:
+          description: Unauthenticated
+        403:
+          description: Unauthorised
+        500:
+          description: Internal server error
+  /login:
+    post:
+      tags:
+        - users
+      summary: Authenticate a user
+      operationId: authenticateUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                login:
+                  type: string
+                  example: sherlock@holmes.co.uk
+                password:
+                  type: string
+                  example: BakerSt221-b
+      responses:
+        200:
+          description: >
+            Successfully authenticated.
+            The session ID is returned in a cookie named `u`. You need to include this cookie in subsequent requests.
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: u=aec070645fe53ee3b3763059376134f058cc337247c978add178b6ccdfb0019f; HttpOnly; Secure
+        401:
+          description: incorrect login or password
+        500:
+          description: Internal server error
+  /posts:
+    post:
+      tags:
+        - posts
+      security:
+        - cookieAuth: []
+      summary: Create post
+      operationId: createPost
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePost'
+      responses:
+        200:
+          description: Successfully created post
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        400:
+          description: Data validation errors
+        401:
+          description: Unauthenticated
+        403:
+          description: Unauthorised
+        500:
+          description: Internal server error
+  /posts/{postId}/reactions:
+    post:
+      security:
+        - cookieAuth: []
+      tags:
+        - posts
+      summary: 'Add/remove reaction for a post'
+      operationId: addOrRemovePostReaction
+      parameters:
+        - name: reaction_type
+          in: query
+          description: Reaction type
+          required: true
+          schema:
+            $ref: '#/components/schemas/ReactionType'
+        - name: operation_type
+          in: query
+          description: Add or remove reaction
+          required: true
+          schema:
+            type: string
+            enum: ['add', 'remove']
+        - name: postId
+          in: path
+          description: Post id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        200:
+          description: A reaction has been added successfully
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Ok
+        400:
+          description: Data validation errors
+        401:
+          description: Unauthenticated
+        403:
+          description: Unauthorised
+        500:
+          description: Internal server error
+  /posts/{postId}/comments:
+    post:
+      tags:
+        - posts
+      summary: Add post comment
+      security:
+        - cookieAuth: []
+      operationId: addPostComment
+      parameters:
+        - name: postId
+          in: path
+          description: Post Id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateComment'
+      responses:
+        200:
+          description: A comment has been added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        400:
+          description: Data validation errors
+        401:
+          description: Unauthenticated
+        403:
+          description: Unauthorised
+        500:
+          description: Internal server error
+  /users/{userId}/{operationType}:
+    post:
+      tags:
+        - users
+      security:
+        - cookieAuth: []
+      summary: Add subscription for a user
+      operationId: addOrRemoveUserSubscription
+      parameters:
+        - name: userId
+          in: path
+          description: User id
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: operationType
+          in: path
+          description: Operation type
+          required: true
+          schema:
+            type: string
+            enum: ['subscribe', 'unsubscribe']
+      responses:
+        200:
+          description: Subscribed successfully
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Ok
+        400:
+          description: Data validation errors
+        401:
+          description: Unauthenticated
+        403:
+          description: Unauthorised
+        500:
+          description: Internal server error
+  /ui/main:
+    get:
+      summary: Application home page
+      tags:
+        - ui
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: user
+          in: query
+          description: Show posts from specific user
+          required: false
+          schema:
+            type: integer
+        - name: location
+          in: query
+          description: Show posts from specific location
+          required: false
+          schema:
+            type: integer
+        - name: sorting
+          in: query
+          description: Posts sorting order
+          required: true
+          schema:
+            type: string
+            enum: ['time', 'popularity', 'location']
+            default: 'time'
+        - name: limit
+          in: query
+          description: Maximum amount
+          required: true
+          schema:
+            type: integer
+            default: 30
+        - name: offset
+          in: query
+          description: Offset for the search
+          required: true
+          schema:
+            type: integer
+            default: 0
+      responses:
+        200:
+          description: Returns posts in chronological order filtered by some conditions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Post'
+        401:
+          description: Unauthenticated
+        500:
+          description: Internal server error
+  /ui/feed:
+    get:
+      tags:
+        - ui
+      security:
+        - cookieAuth: []
+      description: Display a feed of posts from followed users
+      operationId: displayFeed
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum amount
+          required: true
+          schema:
+            type: integer
+            default: 30
+        - name: offset
+          in: query
+          description: Offset for the search
+          required: true
+          schema:
+            type: integer
+            default: 0
+      responses:
+        200:
+          description: Feed loaded successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Post'
+        401:
+          description: Unauthenticated
+        500:
+          description: Internal server error
+  /locations:
+    get:
+      security:
+        - cookiaAuth: []
+      tags:
+        - ui
+      parameters:
+        - name: location
+          in: query
+          required: true
+          schema:
+            type: string
+            example: USA, Chicago
+        - name: limit
+          in: query
+          description: Maximum amount
+          required: true
+          schema:
+            type: integer
+            default: 30
+        - name: offset
+          in: query
+          description: Offset for the search
+          required: true
+          schema:
+            type: integer
+            default: 0
+      responses:
+        200:
+          description: Returns founded locations list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Location'
+        401:
+          description: Unauthenticated
+        500:
+          description: Internal server error
+  /locations/{locationId}/feed:
+    get:
+      tags:
+        - ui
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: locationId
+          in: path
+          required: true
+          description: Location Id
+          schema:
+            type: integer
+            format: int64
+        - name: sortingBy
+          in: query
+          required: false
+          description: Post are ordered by
+          schema:
+            type: string
+            enum: ['time', 'popularity']
+        - name: limit
+          in: query
+          description: Maximum amount
+          required: true
+          schema:
+            type: integer
+            default: 30
+        - name: offset
+          in: query
+          description: Offset for the search
+          required: true
+          schema:
+            type: integer
+            default: 0
+      responses:
+        200:
+          description: Display post related to the location
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Post'
+        401:
+          description: Unauthenticated
+        500:
+          description: Internal server error
+components:
+  schemas:
+    BaseUser:
+      type: object
+      properties:
+        login:
+          type: string
+          example: winston@churchill.co.uk
+        firstname:
+          type: string
+          example: Winston
+        lastname:
+          type: string
+          example: Churchill
+    CreateUserForm:
+      allOf:
+        - $ref: '#/components/schemas/BaseUser'
+        - type: object
+      properties:
+        password:
+          type: string
+          example: password
+    User:
+      allOf:
+        - $ref: '#/components/schemas/BaseUser'
+        - type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 424008937
+    Media:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        mime:
+          type: string
+          enum: [ "video/mp4", "image/png" ]
+        file:
+          type: string
+    CreatePost:
+      type: object
+      properties:
+        title:
+          type: string
+          example: A Journey to Rome
+        content:
+          type: string
+        cover:
+          $ref: '#/components/schemas/Media'
+        location:
+          $ref: '#/components/schemas/Location'
+        media:
+          type: array
+          items:
+            $ref: '#/components/schemas/Media'
+    Post:
+      allOf:
+        - $ref: '#/components/schemas/CreatePost'
+        - type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+        reactions:
+          type: array
+          items:
+            type: object
+            properties:
+              reactionType:
+                $ref: '#/components/schemas/ReactionType'
+              count:
+                type: integer
+    CreateComment:
+      type: object
+      properties:
+        timestamp:
+          type: integer
+        content:
+          type: string
+          example: Comment for some post
+    Comment:
+      allOf:
+        - $ref: '#/components/schemas/CreateComment'
+        - type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+    Reaction:
+      type: object
+      properties:
+        reaction:
+          $ref: '#/components/schemas/ReactionType'
+    ReactionType:
+      type: string
+      enum:
+        - like
+        - dislike
+    Location:
+      type: object
+      properties:
+        geo:
+          type: object
+          properties:
+            lat:
+              type: number
+            lng:
+              type: number
+        title:
+          type: string
+          example: London, Heathrow
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: u
