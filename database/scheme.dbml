@@ -1,0 +1,58 @@
+Table travellers.users {
+ id integer [pk]
+ login varchar [unique]
+ password varchar [note: 'A password hash']
+ firstname varchar
+ lastname varchar
+}
+
+Enum travellers.mediaType {
+  video_mp4
+  image_png
+  image_jpeg
+}
+
+Table travellers.media {
+  id integer [pk]
+  type tavellers.mediaType
+  file varchar [note: 'A file URL']
+  user_id integer [ref: > travellers.users.id]
+}
+
+Table travellers.location {
+  id integer [pk]
+  title varchar
+  geo json
+}
+
+Table travellers.post {
+  id integer [pk]
+  title varchar
+  content text
+  cover_id integer [ref: > travellers.media.id]
+  user_ud integer [ref: > travellers.users.id]
+  location_id integer [ref: > travellers.location.id]
+}
+
+Ref media_post: travellers.media.id <> travellers.post.id
+
+Table travellers.comments {
+  id integer [pk]
+  reply_id integer [note: 'replied comment id']
+  content text
+  user_ud integer [ref: > travellers.users.id]
+  post_id integer [ref: > travellers.post.id]
+}
+
+Enum travellers.reactionType {
+  like
+  love
+  dislike
+}
+
+Table travellers.reaction {
+  id integer [pk]
+  type travellers.reactionType
+  user_ud integer [ref: > travellers.users.id]
+  post_id integer [ref: > travellers.post.id]
+}
