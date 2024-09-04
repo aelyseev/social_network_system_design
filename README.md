@@ -85,6 +85,7 @@ allow users to browse posts related to specific locations.
 ```shell
 DAU = 10 000 000
 RPS = 10 000 000 * 3 / 86 400 ~ 350
+RPS media = 10 000 000 * 3(feed pages) * 30(posts in feed) * 10(media in post) / 86 400 ~ 105 000
 ```
 
 ### RPS (publish post)
@@ -111,26 +112,30 @@ RPS = 10 000 000 * 12 / 86 400 / 7 ~ 200
 text: ~10kb
 photo: ~200kb
 photos is post: ~4-6
-average post size: 10 + 200 * 6 ~ 1.2mb
+average post size: 10Kb
+average post with media size: 10 + 200 * 6 ~ 1.2Mb
 average comments for post: 10
 ```
 
 ### Traffic(feed view)
 ```shell
 posts in a feed: ~20-30
-traffic = 350 * 30 * 1.2mb = 12 Gb/s
+traffic = 350 * 30 * 1.2Mb = 12 Gb/s
+traffic posts = 350 * 30 * 10Kb = 105 Mb/s
+traffic media = 350 * 30 * 1.2Mb = 12 Gb/s
 ```
 
 ### Traffic(publish post)
 ```shell
-traffic = 33 * 1.2mb = 40 Mb/s
+traffic posts media = 33 * 1.2mb = 40 Mb/s
+traffic posts = 33 * 10Kb = 330 Kb/s
 ```
 
 ### Traffic(comments)
 ```shell
-comment size: 100b
-traffic(save) = 100 * 100b = 10 Kb/s
-traffic(read) = 992 * 100b = 100 Kb/s
+comment size: 100B
+traffic(save) = 100 * 100B = 10 Kb/s
+traffic(read) = 992 * 100B = 100 Kb/s
 ```
 
 ### Traffic(reactions)
@@ -146,20 +151,34 @@ traffic = 100 * 10b = 1 Kb/s
 
 ## Hardware
 
-1. Posts
-   * Capacity: `40 Mb/s * 86400 * 365 ~ 1200Tb`
+1. Posts media
+   * Capacity: `40 Mb/s * 86400 * 365 ~ 1200 Tb`
      1. HDD
-     * Disks for capacity: `1200Tb / 32Tb ~ 40`
+     * Disks for capacity: `1200 Tb / 32 Tb ~ 40`
      * Disks for throughput(saving data): `40 Mb/s / 100 Mb/s ~ 1`
      * Disks for throughput(reading data): `12 Gb/s / 100 Mb/s ~ 120`
-     * Disks for iops: `350 / 100 ~ 4`
+     * Disks for iops: `105 000 / 100 ~ 1050`
      * Disks: `120`
      2. SSD(SATA)
      * Disks for capacity: `1200Tb / 100Tb ~ 12`
      * Disks for throughput (saving): `40 Mb/s / 500 Mb/s ~ 1`
      * Disks for throughput (reading): `12 Gb/s / 500 Mb/s ~ 24`
+     * Disks for iops: `105 000 / 500 ~ 210`
+     * Disks: `210`
+1. Posts content
+   * Capacity: `330 Kb/s * 86400 * 365 ~ 10Tb`
+     1. HDD
+     * Disks for capacity: `10Tb / 32Tb ~ 1`
+     * Disks for throughput(saving data): `330 Kb/s / 100 Mb/s ~ 1`
+     * Disks for throughput(reading data): `105 MB/s / 100 Mb/s ~ 2`
+     * Disks for iops: `350 / 100 ~ 4`
+     * Disks: `4`
+     2. SSD(SATA)
+     * Disks for capacity: `10Tb / 100Tb ~ 1`
+     * Disks for throughput (saving): `330 Kb/s / 500 Mb/s ~ 1`
+     * Disks for throughput (reading): `105 MB/s / 500 Mb/s ~ 1`
      * Disks for iops: `350 / 500 ~ 1`
-     * Disks: `24`
+     * Disks: `1`
 1. Comments
    * Capacity: `10 Kb/s * 86400 * 365 ~ 315 Gb`
    1. HDD
@@ -180,6 +199,28 @@ traffic = 100 * 10b = 1 Kb/s
    * Disks for throughput: `1Kb/s / 100Mb/s ~ 1`
    * Disks for iops: `200 / 100 ~ 2`
    * Disks: `2`
+
+### Hosts
+
+Replication as master-slave, async, replication factor 2
+
+1. Posts
+   1. HDD
+    * Hosts: `120 / 2 = 60`
+    * Hosts_with_replication: `60 * 2 = 120`
+   2. SSD(SATA)
+    * Hosts: `24 / 2 = 12`
+    * Hosts_with_replication: `12 * 2 = 24`
+1. Comments
+   1. HDD
+    * Hosts: `1 / 2 = 1`
+    * Hosts_with_replication: `1 * 2 = 2`
+   2. SSD(SATA)
+    * Hosts: `1 / 2 = 1`
+    * Hosts_with_replication: `1 * 2 = 2`
+1. Reactions
+   * Hosts: `2 / 2 = 1`
+   * Hosts_with_replication: `1 * 2 = 2`
 
 ## Data scheme
 

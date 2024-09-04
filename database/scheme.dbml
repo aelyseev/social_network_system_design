@@ -1,3 +1,9 @@
+// Replication:
+// master-slave, async
+// replication factor 2
+
+// sharding
+// key based by id
 Table travellers.users {
  id integer [pk]
  login varchar [unique]
@@ -12,11 +18,14 @@ Enum travellers.mediaType {
   image_jpeg
 }
 
+// sharding
+// key based by post_id
 Table travellers.media {
   id integer [pk]
   type tavellers.mediaType
   file varchar [note: 'A file URL']
   user_id integer [ref: > travellers.users.id]
+  post_id integer [ref: > travellers.post.id]
 }
 
 Table travellers.location {
@@ -25,6 +34,8 @@ Table travellers.location {
   geo json
 }
 
+// sharding
+// key based by id
 Table travellers.post {
   id integer [pk]
   title varchar
@@ -34,8 +45,8 @@ Table travellers.post {
   location_id integer [ref: > travellers.location.id]
 }
 
-Ref media_post: travellers.media.id <> travellers.post.id
-
+// sharding
+// key based by post_id
 Table travellers.comments {
   id integer [pk]
   reply_id integer [note: 'replied comment id']
@@ -50,6 +61,8 @@ Enum travellers.reactionType {
   dislike
 }
 
+// sharding
+// key based by post_id
 Table travellers.reaction {
   id integer [pk]
   type travellers.reactionType
