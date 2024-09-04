@@ -517,7 +517,7 @@ components:
             type: object
             properties:
               reactionType:
-                $ref: '#/components/schemas/ReactionType'
+                $ref: '#/components/schemas/Reaction'
               count:
                 type: integer
     CreateComment:

@@ -61,10 +61,12 @@ allow users to browse posts related to specific locations.
 ### Application Audience
 * User base: 10,000,000 DAO within the first year after launch, with further growth expected.
 * Users behaviour: 
-  * 2—3 visited page per day 
+  * 2—3 visited feeds page per day 
+  * 5—6 visited post page per day 
   * 1-2 post per week
   * comments 5-6 per week
   * reactions 10-12 per week
+  * average comments for post 10
 
 ### Application Features
 * Seasonality in the application: no seasonal changes expected so far. 
@@ -94,7 +96,8 @@ RPS = 10 000 000 * 2 / 86 400 / 7 ~ 33
 ### RPS (comments)
 ```shell
 DAU = 10 000 000
-RPS = 10 000 000 * 6 / 86 400 / 7 ~ 100
+RPS(publish) = 10 000 000 * 6 / 86 400 / 7 ~ 100
+RPS(read) = 10 000 000 * 6 * 10 / 86 400 / 7 ~ 992
 ```
 
 ### RPS (reactions)
@@ -103,12 +106,13 @@ DAU = 10 000 000
 RPS = 10 000 000 * 12 / 86 400 / 7 ~ 200
 ```
 
-### Post size
+### Post parameters
 ```shell
 text: ~10kb
 photo: ~200kb
 photos is post: ~4-6
 average post size: 10 + 200 * 6 ~ 1.2mb
+average comments for post: 10
 ```
 
 ### Traffic(feed view)
@@ -125,7 +129,8 @@ traffic = 33 * 1.2mb = 40 Mb/s
 ### Traffic(comments)
 ```shell
 comment size: 100b
-traffic = 100 * 100b = 10 Kb/s
+traffic(save) = 100 * 100b = 10 Kb/s
+traffic(read) = 992 * 100b = 100 Kb/s
 ```
 
 ### Traffic(reactions)
@@ -138,3 +143,44 @@ traffic = 100 * 10b = 1 Kb/s
 ```shell
 1 000 000
 ```
+
+## Hardware
+
+1. Posts
+   * Capacity: `40 Mb/s * 86400 * 365 ~ 1200Tb`
+     1. HDD
+     * Disks for capacity: `1200Tb / 32Tb ~ 40`
+     * Disks for throughput(saving data): `40 Mb/s / 100 Mb/s ~ 1`
+     * Disks for throughput(reading data): `12 Gb/s / 100 Mb/s ~ 120`
+     * Disks for iops: `350 / 100 ~ 4`
+     * Disks: `120`
+     2. SSD(SATA)
+     * Disks for capacity: `1200Tb / 100Tb ~ 12`
+     * Disks for throughput (saving): `40 Mb/s / 500 Mb/s ~ 1`
+     * Disks for throughput (reading): `12 Gb/s / 500 Mb/s ~ 24`
+     * Disks for iops: `350 / 500 ~ 1`
+     * Disks: `24`
+1. Comments
+   * Capacity: `10 Kb/s * 86400 * 365 ~ 315 Gb`
+   1. HDD
+      * Disks for capacity: `315Gb/ 100Tb ~ 1`
+      * Disks for throughput(saving): `10Kb/s / 100Mb/s ~ 1`
+      * Disks for throughput(reading): `100Kb/s / 100Mb/s ~ 1`
+      * Disks for iops: `100 / 100 ~ 1`
+      * Disks: `1`
+   2. SSD(SATA)
+      * Disks for capacity: `315Gb/ 500Tb ~ 1`
+      * Disks for throughput(saving): `10Kb/s / 500Mb/s ~ 1`
+      * Disks for throughput(reading): `100Kb/s / 500Mb/s ~ 1`
+      * Disks for iops: `100 / 500 ~ 1`
+      * Disks: `1`
+1. Reactions
+   * Capacity: `1Kb/s * 86400 * 365 ~ 32Gb`
+   * Disks for capacity: `32Gb / 32Tb ~ 1`
+   * Disks for throughput: `1Kb/s / 100Mb/s ~ 1`
+   * Disks for iops: `200 / 100 ~ 2`
+   * Disks: `2`
+
+## Data scheme
+
+https://dbdiagram.io/d/emoving-66b9f2568b4bb5230edf636b
