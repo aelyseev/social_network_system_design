@@ -1,0 +1,17 @@
+@startuml Travellers Network
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Boundary(relations_component, "Relations component") {
+    Container(users_service, 'Users service')
+    ContainerDb(users_db, "Users database", "Postgres")
+    Container(subscriptions_service, 'Subscriptions service')
+    ContainerDb(users_subscriptions_db, "Users subscriptions database", "Postgres")
+    ContainerDb(users_locations_db, "Users locations database", "Postgres")
+}
+
+Rel(subscriptions_service, users_subscriptions_db, "", "")
+Rel(subscriptions_service, users_locations_db, "", "")
+Rel(users_service, users_db, "", "")
+
+@enduml
