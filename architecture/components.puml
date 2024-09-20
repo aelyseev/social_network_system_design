@@ -1,0 +1,21 @@
+@startuml Travellers Network
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Person(user, 'User')
+Component(balancer, 'Load balancer')
+Component(gateway, 'API gateway')
+
+Component(main_data_management, 'Main data management component', '', 'The services list:\n • Comments service\n • Locations service\n • Reactions service\n • Posts service\n • Posts view service\n • Media service')
+Component(feeds_component, 'Feeds Component', $descr='The services list:\n • Feeds service')
+Component(relations_component, 'Relations Component', $descr='The main services list:\n • Users service\n • Subscriptions service')
+
+Rel(user, balancer, '', '')
+Rel(balancer, gateway, '', '')
+Rel(gateway, main_data_management, '', '', $descr='API calls to create media, location, post, reaction, comment, view specific post')
+Rel(gateway, feeds_component, '', $descr='API calls to get home/user/location feeds')
+Rel(gateway, relations_component, '', $descr='API calls to create user, subscription')
+Rel(relations_component, feeds_component, '', $descr='Subscriptions update events')
+Rel(main_data_management, feeds_component, '', $descr='Post, location update events')
+
+@enduml

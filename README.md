@@ -79,6 +79,34 @@ allow users to browse posts related to specific locations.
 * Application Availability
   * No more than a few hours of downtime per year
 
+## Design overview
+
+### Level 1. System context diagram
+
+<img alt="System context diagram" src="images/root-view.svg" />
+
+### Level 2. Core system container diagram
+
+<img alt="Core system container diagram" src="images/components-view.svg" />
+
+### Level 3. Posts, comments, reactions, locations component
+
+<img alt="Posts, comments, reactions, locations component" src="images/data-manage-component-view.svg" />
+
+### Level 3. Feeds component
+
+<img alt="Feeds component" src="images/feeds-component-view.svg" />
+
+### Level 3. Users, subscriptions component
+
+<img alt="Users, subscriptions component" src="images/relations-component-view.svg" />
+
+### Full scheme
+
+<img alt="Full scheme" src="images/full-view.svg" />
+
+[Alternative scheme](images/full-view-figma.svg)
+
 ## Calculations
 
 ### RPS (feed view)
@@ -86,6 +114,11 @@ allow users to browse posts related to specific locations.
 DAU = 10 000 000
 RPS = 10 000 000 * 3 / 86 400 ~ 350
 RPS media = 10 000 000 * 3(feed pages) * 30(posts in feed) * 10(media in post) / 86 400 ~ 105 000
+```
+
+### RPS (post view)
+```shell
+RPS = 10 000 000 * 6 / 86 400 ~ 700
 ```
 
 ### RPS (publish post)
@@ -120,6 +153,14 @@ average comments for post: 10
 ### Traffic(feed view)
 ```shell
 posts in a feed: ~20-30
+traffic = 350 * 30 * 1.2Mb = 12 Gb/s
+traffic posts = 350 * 30 * 10Kb = 105 Mb/s
+traffic media = 350 * 30 * 1.2Mb = 12 Gb/s
+```
+
+### Traffic(post view)
+```shell
+media in a post: ~5-10
 traffic = 350 * 30 * 1.2Mb = 12 Gb/s
 traffic posts = 350 * 30 * 10Kb = 105 Mb/s
 traffic media = 350 * 30 * 1.2Mb = 12 Gb/s

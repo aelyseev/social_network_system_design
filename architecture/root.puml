@@ -1,0 +1,7 @@
+@startuml Travellers Network
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(user, 'User')
+Container(app, 'Travellers application', 'software', 'Travellers social network. Locations, people, impressions')
+Rel(user, app, 'Main functionality: view posts, places, comments, reactions')
+@enduml

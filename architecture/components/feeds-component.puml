@@ -1,0 +1,24 @@
+@startuml Travellers Network
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Boundary(feed_component, "Feeds component") {
+    Container(feeds_service, 'Feeds service')
+    ContainerDb(feeds_homes_db, "Home page views", "Cassandra", "• user_id [cluster index]\n • timestamp\n • last <n> posts with:\n – comments count\n – reactions count\n – media preview\n – author")
+    ContainerDb(feeds_homes_cache, "Home page views cache", "Redis", "• last <n> posts with:\n – comments count\n – reactions count\n – media preview\n – author")
+    ContainerDb(feeds_users_db, "All user's page views", "Cassandra", "• user_id [cluster index]\n • timestamp\n • last <n> posts with:\n – comments count\n – reactions count\n – media preview\n – author")
+    ContainerDb(feeds_users_cache, "All user's page views cache", "Redis", "• last <n> posts with:\n – comments count\n – reactions count\n – media preview\n – author")
+    ContainerQueue(feeds_updates_queue, "Updates Queue", "Kafka")
+    Rel(feeds_service, feeds_homes_db, "", "")
+    Rel(feeds_service, feeds_updates_queue, "", "")
+    Rel(feeds_homes_db, feeds_homes_cache, "", "")
+    Rel(feeds_service, feeds_users_db, "", "")
+    Rel(feeds_users_db, feeds_users_cache, "", "")
+}
+
+Rel(gateway, feeds_service, "GET /ui/feed", "")
+Rel(gateway, feeds_service, "GET /ui/home", "")
+
+Rel(posts_views_service, feeds_updates_queue, "Update events", "")
+
+@enduml

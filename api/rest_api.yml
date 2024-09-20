@@ -260,7 +260,7 @@ paths:
           description: Unauthorised
         500:
           description: Internal server error
-  /ui/main:
+  /ui/home:
     get:
       summary: Application home page
       tags:
@@ -268,26 +268,6 @@ paths:
       security:
         - cookieAuth: []
       parameters:
-        - name: user
-          in: query
-          description: Show posts from specific user
-          required: false
-          schema:
-            type: integer
-        - name: location
-          in: query
-          description: Show posts from specific location
-          required: false
-          schema:
-            type: integer
-        - name: sorting
-          in: query
-          description: Posts sorting order
-          required: true
-          schema:
-            type: string
-            enum: ['time', 'popularity', 'location']
-            default: 'time'
         - name: limit
           in: query
           description: Maximum amount
@@ -321,9 +301,15 @@ paths:
         - ui
       security:
         - cookieAuth: []
-      description: Display a feed of posts from followed users
+      summary: Display a feed for a user or for a location
       operationId: displayFeed
       parameters:
+        - name: view
+          in: query
+          description: "Specify a view: user or location"
+          schema:
+            type: string
+            enum: ['user', 'location']
         - name: limit
           in: query
           description: Maximum amount
@@ -351,8 +337,9 @@ paths:
           description: Unauthenticated
         500:
           description: Internal server error
-  /locations:
+  /ui/locations:
     get:
+      summary: Search for locations
       security:
         - cookiaAuth: []
       tags:
@@ -387,54 +374,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Location'
-        401:
-          description: Unauthenticated
-        500:
-          description: Internal server error
-  /locations/{locationId}/feed:
-    get:
-      tags:
-        - ui
-      security:
-        - cookieAuth: []
-      parameters:
-        - name: locationId
-          in: path
-          required: true
-          description: Location Id
-          schema:
-            type: integer
-            format: int64
-        - name: sortingBy
-          in: query
-          required: false
-          description: Post are ordered by
-          schema:
-            type: string
-            enum: ['time', 'popularity']
-        - name: limit
-          in: query
-          description: Maximum amount
-          required: true
-          schema:
-            type: integer
-            default: 30
-        - name: offset
-          in: query
-          description: Offset for the search
-          required: true
-          schema:
-            type: integer
-            default: 0
-      responses:
-        200:
-          description: Display post related to the location
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Post'
         401:
           description: Unauthenticated
         500:

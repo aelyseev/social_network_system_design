@@ -1,0 +1,101 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Person(user, 'User')
+Component(balancer, 'Load balancer')
+Component(gateway, 'API gateway')
+
+Boundary(main_data_management, "Main data management component") {
+    Container(media_service, 'Media service', "application")
+    ContainerDb(media_main_db, "Media database", "Ceph – S3 like", "main bucket")
+    ContainerDb(media_temp_db, "Media database", "Ceph – S3 like", "temporary bucket, 1 day TTL")
+    Container(media_cleaner_service, "Media cleaner service", "application")
+
+    Container(posts_service, 'Posts service', "application")
+    ContainerDb(posts_db, "Posts database", "Postgres")
+    ContainerQueue(posts_created_queue, "Published posts queue", "Kafka")
+    Container(posts_views_service, 'Posts view service', "application")
+    ContainerDb(posts_views_db, "Posts views database", "", "• post_id\n • timestamp\n • location\n • post content\n • last <n> comments\n • reactions count\n • last <n> reaction + author\n")
+    ContainerDb(posts_views_cache, "Posts views cache", "LFU cache", "• post_id\n • timestamp\n • location\n • post content\n • last <n> comments\n • reactions count\n • last <n> reaction + author\n")
+
+    Container(comments_service, 'Comments service', "application")
+    ContainerDb(comments_db, "Comments database", "Postgres")
+    ContainerQueue(comments_created_queue, "Published comments queue", "Kafka")
+
+    Container(locations_service, 'Locations service', "application")
+    ContainerDb(locations_db, "Locations database", "Postgres", "• id\n • title\n • geo\n • popularity, based on created posts, posts views, comments, reactions\n")
+
+    Container(reactions_service, 'Reactions service', "application")
+    ContainerDb(reactions_db, "Reactions database", "Postgres")
+    ContainerQueue(reactions_created_queue, "Published reactions queue", "Kafka")
+}
+
+Boundary(feed_component, "Feeds component") {
+    Container(feeds_service, 'Feeds service')
+    ContainerDb(feeds_homes_db, "Home page views", "Cassandra", "• user_id [cluster index]\n • timestamp\n • last <n> posts with:\n – comments count\n – reactions count\n – media preview\n – author")
+    ContainerDb(feeds_homes_cache, "Home page views cache", "Redis", "• last <n> posts with:\n – comments count\n – reactions count\n – media preview\n – author")
+    ContainerDb(feeds_users_db, "All user's page views", "Cassandra", "• user_id [cluster index]\n • timestamp\n • last <n> posts with:\n – comments count\n – reactions count\n – media preview\n – author")
+    ContainerDb(feeds_users_cache, "All user's page views cache", "Redis", "• last <n> posts with:\n – comments count\n – reactions count\n – media preview\n – author")
+    ContainerQueue(feeds_updates_queue, "Updates Queue", "Kafka")
+    Rel(feeds_service, feeds_homes_db, "", "")
+    Rel(feeds_service, feeds_updates_queue, "", "")
+    Rel(feeds_homes_db, feeds_homes_cache, "", "")
+    Rel(feeds_service, feeds_users_db, "", "")
+    Rel(feeds_users_db, feeds_users_cache, "", "")
+}
+
+Boundary(relations_component, "Relations component") {
+    Container(users_service, 'Users service')
+    ContainerDb(users_db, "Users database", "Postgres")
+    Container(subscriptions_service, 'Subscriptions service')
+    ContainerDb(users_subscriptions_db, "Users subscriptions database", "Postgres")
+    ContainerDb(users_locations_db, "Users locations database", "Postgres")
+
+    Rel(subscriptions_service, users_subscriptions_db, "", "")
+    Rel(subscriptions_service, users_locations_db, "", "")
+    Rel(users_service, users_db, "", "")
+}
+
+Rel(user, balancer, "", "")
+Rel(balancer, gateway, "", "")
+
+Rel(comments_created_queue, locations_service, "Update locations popularity", "")
+Rel(comments_created_queue, posts_views_service, "", "")
+Rel(comments_service, comments_created_queue, "", "")
+Rel(comments_service, comments_db, "", "")
+
+Rel(gateway, comments_service, "POST /posts/post_id/add-comment/{comment}", "")
+Rel(gateway, feeds_service, "GET /ui/feed", "")
+Rel(gateway, feeds_service, "GET /ui/home", "")
+Rel(gateway, media_service, "POST /media/upload/{file}", "")
+Rel(gateway, posts_service, "POST /posts/{content}/{location}/{media}", "")
+Rel(gateway, posts_views_service, "GET /posts/{post_id}", "")
+Rel(gateway, reactions_service, "POST /post/{post_id}/add-reaction/{reaction_type}", "")
+Rel(gateway, subscriptions_service, "POST /subscriptions/{location}|{user}", "")
+Rel(gateway, users_service, "POST /users/{users-details}", "")
+
+Rel(locations_service, feeds_updates_queue, "Location created events", "")
+Rel(locations_service, locations_db, "", "")
+
+Rel(media_cleaner_service, media_main_db, "post created", "event")
+Rel(media_cleaner_service, posts_created_queue, "", "")
+Rel(media_service, media_temp_db, "Create a file in temporary bucket", "")
+
+Rel(posts_created_queue, locations_service, "Update locations popularity", "")
+Rel(posts_created_queue, posts_views_service, "", "")
+Rel(posts_service, posts_created_queue, "post created", "event")
+Rel(posts_service, posts_db, "", "")
+
+Rel(posts_views_service, feeds_updates_queue, "Update events", "")
+Rel(posts_views_service, posts_views_cache, "", "")
+Rel(posts_views_service, posts_views_db, "", "")
+
+Rel(reactions_created_queue, locations_service, "Update locations popularity", "")
+Rel(reactions_created_queue, posts_views_service, "", "")
+
+Rel(reactions_service, reactions_created_queue, "", "")
+Rel(reactions_service, reactions_db, "", "")
+
+Rel(subscriptions_service, feeds_updates_queue, "Subscription created/updated events", "")
+@enduml
